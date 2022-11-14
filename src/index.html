@@ -13,12 +13,18 @@
     <!-- Ajax script -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 
+    <!-- Highcharts scripts -->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
     <!-- Custom scripts -->
-    <script type="module" src="./main.js"></script>
+    <script type="module" src="./js/main.js"></script>
 
     <!-- Custom modules -->
-    <script type="module" src="./modules/constants.js"></script>
-    <script type="module" src="./modules/helpers.js"></script>
+    <script type="module" src="./js/modules/constants.js"></script>
+    <script type="module" src="./js/modules/helpers.js"></script>
 
 
     <title>Hello, world!</title>
@@ -64,12 +70,27 @@
                 </ul>
                 <form class="d-flex" role="search">
                     <input class="form-control me-2" type="search" placeholder="Search movies by year"
-                        id="searchMovieByYearInput" aria-label="Search">
-                    <button class="btn btn-outline-success" id="searchMovieByYearBtn" type="submit">Search</button>
+                        id="discoverMovieByYearInput" aria-label="Search">
+                    <button class="btn btn-outline-success" id="discoverMovieByYearBtn" type="submit">Search</button>
+                </form>
+
+                <form class="d-flex" role="search">
+                    <input class="form-control me-2" type="search" placeholder="Search movies by similar titles"
+                        id="discoverMovieByTextInput" aria-label="Search">
+                    <button class="btn btn-outline-success" id="discoverMovieByTextBtn" type="submit">Search</button>
                 </form>
             </div>
         </div>
     </nav>
+
+    <figure class="highcharts-figure">
+        <div id="container"></div>
+        <p class="highcharts-description">
+            Pie charts are very popular for showing a compact overview of a
+            composition or comparison. While they can be harder to read than
+            column charts, they remain a popular choice for small datasets.
+        </p>
+    </figure>
 
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
