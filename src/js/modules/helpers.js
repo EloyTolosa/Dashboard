@@ -11,7 +11,7 @@ function Alert(fname, msg) {
 }
 
 
-async function Request(url, method, data = {}) {
+function Request(url, method, data = {}) {
 
     if (method != "GET" && method != "POST") {
         error("GET", "Invalid method. Options: [GET|POST]")
