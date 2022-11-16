@@ -1,7 +1,10 @@
-1. Barchart -> movies by year -
-2. Search box -> search movies by title (similar) -
-    2.1. Click on movie -> movie info (+ video trailer)
-        2.1.1. Click on actors, get actors information
-3. % movies by genre --
-4. List of most famous actors by year
+1. Barchart -> movies released by year 
+2. Piechart -> movies by genre --
+3. Search box -> search movies by year (similar) --
+    2.1. Click on movie -> movie info (+ video trailer) --
+        2.1.1. Click on actors, get actors information 
+4. Map with amount of movies per city (plot) ?
+
+4. (if positve) -> Host web with AWS student account with API Gateway + AWS Lambda ?
+5. Login system
 

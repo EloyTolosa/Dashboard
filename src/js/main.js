@@ -1,10 +1,12 @@
 import { Request, Alert } from './modules/helpers.js';
-import { ApiURL, ApiKey, DiscoverMoviesURL, SearchMoviesURL, ListMovieGenres } from './modules/constants.js';
+import { ApiURL, ApiKey, ImagesApiUrl, DiscoverMoviesURL, SearchMoviesURL, ListMovieGenres, GetMovieImages } from './modules/constants.js';
+import { NewCard } from './modules/elements.js';
 
 $("#discoverMovieByYearBtn").click(
     loadMoviesByYear
 )
 
+// TODO: use load* function
 $("#discoverMovieByTextBtn").click(
     getMoviesBySimilarText
 )
@@ -29,13 +31,65 @@ function loadMovieInfoOnClick(event) {
 
     // load movie information with movie title
     var movieTitle = event.currentTarget.innerHTML
+    var promise = getMoviesBySimilarText(movieTitle)
 
+    promise.then(
+        //success
+        function (movieInfoResponse) {
+            console.log("Movie info", movieInfoResponse.results[0])
 
+            var movie = movieInfoResponse.results[0]
+
+            // get image path from endpoint
+            var promise = getMovieImagesByMovieID(movie.id)
+
+            promise.then(
+                //success
+                function (movieImageResponse) {
+
+                    var imagePath = movieImageResponse.backdrops[0].file_path.replace("./", "")
+                    var imagePath = ImagesApiUrl + imagePath
+
+                    var movieTitle = movie.original_title
+                    var movieReleaseDate = movie.release_date
+                    var movieOverview = movie.overview
+
+                    // create movie card
+                    // TODO: move cardHTML to another module
+                    // TODO: add image with .replace() function
+                    $("#movieInfoCol").empty()
+                    $("#movieInfoCol").append(
+                        NewCard(movieTitle, imagePath, movieTitle+" movie image", movieOverview, movieReleaseDate)
+                    )
+                    
+                },
+                // error
+                function (error) {
+                    console.log(error)
+                }
+            )
+        },
+        // error
+        function (error) {
+            Alert("loadMovieInfoOnClick", error)
+        }
+    )
+
+}
+
+async function getMovieImagesByMovieID(movieID) {
+    if (movieID === "" || movieID == null) {
+        Alert("getMovieImagesByMovieID", "movieID is null")
+    }
+
+    var url = ApiURL + GetMovieImages.replace("{movie_id}", movieID) + "?api_key=" + ApiKey
+    return await Request(url, "GET")
 }
 
 function loadMoviesByYear() {
 
-    var moviesByYearPromise = getMoviesByYear()
+    var year = $("#discoverMovieByYearInput").val() // NOTE: val() will return a sttring
+    var moviesByYearPromise = getMoviesByYear(year)
     moviesByYearPromise.then(
         function (response) {
 
@@ -147,9 +201,7 @@ async function getMoviesByGenre() {
     return perMoviesByGenre
 }
 
-async function getMoviesByYear() {
-    var year = $("#discoverMovieByYearInput").val() // NOTE: val() will return a sttring
-
+async function getMoviesByYear(year) {
     if (year == null || year === "") {
         Alert("getMoviesByYear", "Please introduce a year")
         return false
@@ -162,14 +214,17 @@ async function getMoviesByYear() {
     return await Request(url, "GET")
 }
 
-function getMoviesBySimilarText() {
+function loadMoviesBySimilarText() {
     var query = $("#discoverMovieByTextInput").val()
+    var promise = getMoviesBySimilarText(query)
+}
 
+async function getMoviesBySimilarText(query) {
     if (query === "") {
         Alert("getMoviesBySimilarText", "Please introduce a text to search movies with")
         return false
     }
 
-    var url = ApiURL + SearchMoviesURL + "?" + "query=" + text + "&api_key=" + ApiKey
+    var url = ApiURL + SearchMoviesURL + "?" + "query=" + query + "&api_key=" + ApiKey
     return Request(url, "GET")
 }
