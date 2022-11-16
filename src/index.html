@@ -14,23 +14,6 @@
     <link rel="stylesheet" href="css/highcharts.css">
     <link rel="stylesheet" href="css/list.css">
 
-    <!-- Ajax script -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-
-    <!-- Highcharts scripts -->
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/modules/exporting.js"></script>
-    <script src="https://code.highcharts.com/modules/export-data.js"></script>
-    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
-
-    <!-- Custom scripts -->
-    <script type="module" src="./js/main.js"></script>
-
-    <!-- Custom modules -->
-    <script type="module" src="./js/modules/constants.js"></script>
-    <script type="module" src="./js/modules/helpers.js"></script>
-
-
     <title>Hello, world!</title>
 </head>
 
@@ -97,11 +80,47 @@
         </p>
     </figure>
 
-    <!-- List of movies after yearching per year -->
-    <ul class="list-group" id="moviesList">
-    </ul>
+    <div class="container justify-content-lg-start">
+        <div class="row row-cols-2">
+            <div class="col-4">
+                <ul class="list-group" id="moviesList">
+                    <!-- Adding elements later -->
+                </ul>
+            </div>
+            <div class="col-8">
+                <div class="card border-info mb-3" id="movieInfoCard" style="max-width: 18rem;">
+                    <div class="row no-gutters">
+                        <div class="card-body">
+                            <h5 class="card-title">Card title</h5>
+                            <p class="card-text">This is a wider card with supporting text below as a natural
+                                lead-in to additional content. This content is a little bit longer.</p>
+                            <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Optional JavaScript -->
+
+    <!-- Ajax script -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <!-- Highcharts scripts -->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
+    <!-- Custom scripts -->
+    <script type="module" src="./js/main.js"></script>
+
+    <!-- Custom modules -->
+    <script type="module" src="./js/modules/constants.js"></script>
+    <script type="module" src="./js/modules/helpers.js"></script>
+
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.6.1.js"
         integrity="sha256-3zlB5s2uwoUzrXK3BT7AX3FyvojsraNFxCc2vC/7pNI=" crossorigin="anonymous"></script>

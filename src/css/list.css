@@ -1,7 +1,13 @@
 .list-group {
-    height: 15%;
-    width: 18%;
+    max-height: 450px;
+    max-width: auto;
+    margin-bottom: 5%;
     margin-left: 5%;
     margin-right:10%;
     overflow-y: scroll;
+}
+
+/* Movie information card */
+#movieInfoCard {
+    display: none;
 }

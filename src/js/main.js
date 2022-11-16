@@ -2,11 +2,11 @@ import { Request, Alert } from './modules/helpers.js';
 import { ApiURL, ApiKey, DiscoverMoviesURL, SearchMoviesURL, ListMovieGenres } from './modules/constants.js';
 
 $("#discoverMovieByYearBtn").click(
-    loadMoviesByYear()
+    loadMoviesByYear
 )
 
 $("#discoverMovieByTextBtn").click(
-    getMoviesBySimilarText()
+    getMoviesBySimilarText
 )
 
 // Load piechart with %movies by genre
@@ -14,14 +14,44 @@ $(document).ready(
     loadMoviePercentagePerGenre()
 );
 
+function isScrollbarAtBottom() {
+    var documentHeight = $(document).height();
+    var scrollDifference = $(window).height() + $(window).scrollTop();
+    return (documentHeight == scrollDifference);
+}
+
+$("#movieInfoCard").scroll(function () {
+    console.log("scrolling ...")
+})
+
+// TODO
+function loadMovieInfoOnClick(event) {
+
+    // load movie information with movie title
+    var movieTitle = event.currentTarget.innerHTML
+
+
+}
+
 function loadMoviesByYear() {
-    
-    var moviesByYear = getMoviesByYear()
-    moviesByYear.then(
-        function(response) {
+
+    var moviesByYearPromise = getMoviesByYear()
+    moviesByYearPromise.then(
+        function (response) {
+
+            // first empty the moviesList before entering new values
+            $("#moviesList").empty()
+            response.results.forEach(element => {
+                var listElement = '<button type="button" class="list-group-item list-group-item-action">' + element.original_title + '</button>'
+                $("#moviesList").append(listElement)
+            });
+
+            // then add button click listeners
+            $("button.list-group-item").click(loadMovieInfoOnClick)
+
             console.log(response)
         },
-        function(error) {
+        function (error) {
             Alert("movieByYear.click()", error)
         }
     )
