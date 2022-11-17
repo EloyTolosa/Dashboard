@@ -18,7 +18,7 @@
 </head>
 
 <body>
-    <h1>Hello, world!</h1>
+    <!-- <h1>Hello, world!</h1> -->
 
     <!-- Navigation bar -->
     <nav class="navbar navbar-expand-lg bg-light">
@@ -70,15 +70,35 @@
         </div>
     </nav>
 
-    <!-- Highchart with percentage of movies by genre -->
-    <figure class="highcharts-figure">
-        <div id="container"></div>
-        <p class="highcharts-description">
-            Pie charts are very popular for showing a compact overview of a
-            composition or comparison. While they can be harder to read than
-            column charts, they remain a popular choice for small datasets.
-        </p>
-    </figure>
+    <div class="container justify-content-lg-start">
+        <div class="row row-cols-2">
+            <div class="col">
+                <!-- Highchart with percentage of movies by genre -->
+                <figure class="highcharts-figure">
+                    <div id="container"></div>
+                    <p class="highcharts-description">
+                        Pie charts are very popular for showing a compact overview of a
+                        composition or comparison. While they can be harder to read than
+                        column charts, they remain a popular choice for small datasets.
+                    </p>
+                </figure>
+            </div>
+            <div class="col">
+                <!-- Highchart with movies per every 5 years per genre -->
+                <figure class="highcharts-figure">
+                    <div id="container"></div>
+                    <p class="highcharts-description">
+                        Basic line chart showing trends in a dataset. This chart includes the
+                        <code>series-label</code> module, which adds a label to each line for
+                        enhanced readability.
+                    </p>
+                </figure>
+            </div>
+        </div>
+    </div>
+
+
+
 
     <div class="container justify-content-lg-start">
         <div class="row row-cols-2">
@@ -104,6 +124,7 @@
     <script src="https://code.highcharts.com/modules/exporting.js"></script>
     <script src="https://code.highcharts.com/modules/export-data.js"></script>
     <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+    <script src="https://code.highcharts.com/modules/series-label.js"></script>
 
     <!-- Custom scripts -->
     <script type="module" src="./js/main.js"></script>

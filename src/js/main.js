@@ -59,9 +59,9 @@ function loadMovieInfoOnClick(event) {
                     // TODO: add image with .replace() function
                     $("#movieInfoCol").empty()
                     $("#movieInfoCol").append(
-                        NewCard(movieTitle, imagePath, movieTitle+" movie image", movieOverview, movieReleaseDate)
+                        NewCard(movieTitle, imagePath, movieTitle + " movie image", movieOverview, movieReleaseDate)
                     )
-                    
+
                 },
                 // error
                 function (error) {
@@ -111,6 +111,14 @@ function loadMoviesByYear() {
     )
 
     return false
+}
+
+async function getMoviesPerYear() {
+
+    // get list of all genres
+    var genres = await getGenres()
+
+    // search movies per genre and release date
 }
 
 function loadMoviePercentagePerGenre() {
@@ -166,34 +174,39 @@ function loadMoviePercentagePerGenre() {
     return false
 }
 
+function getGenres() {
+    // get all genres
+    var url = ApiURL + ListMovieGenres + "?" + "api_key=" + ApiKey
+    return Request(url, "GET")
+}
+
+function getMovieNumberByGenre(genre) {
+    const url = ApiURL + DiscoverMoviesURL + "?" + "with_genres=" + genre.id + "&api_key=" + ApiKey
+    return Request(url, "GET")
+}
+
 async function getMoviesByGenre() {
 
     var perMoviesByGenre = []
     var totalMovies = 0
 
-    // get all genres
-    var url = ApiURL + ListMovieGenres + "?" + "api_key=" + ApiKey
-    var req = await Request(url, "GET")
+    var genresRequest = await getGenres()
+    var genres = genresRequest.genres
 
-    // waits for the request to finish
-    var genres = req.genres
     // get number of movies by genre id
     for (let i = 0; i < genres.length; i++) {
+        var moviesRequest = await getMovieNumberByGenre(genres[i])
 
-        const genreId = genres[i].id
-        const genreName = genres[i].name
-        const url = ApiURL + DiscoverMoviesURL + "?" + "with_genres=" + genreId + "&api_key=" + ApiKey
-
-        var movies = await Request(url, "GET")
+        // console.log(genres[i].name, movies.total_results)
         perMoviesByGenre.push({
-            name: genreName,
-            y: movies.total_results,   // We'll later divide it by the total number of movies
-            // across all genres
+            name: genres[i].name,
+            y: moviesRequest.total_results,     // We'll later divide it by the total number of movies
+                                                // across all genres
         })
-        totalMovies += movies.total_results
-
+        totalMovies += moviesRequest.total_results
     }
 
+    // transform top %
     for (let i = 0; i < perMoviesByGenre.length; i++) {
         perMoviesByGenre[i].y /= totalMovies
     }
