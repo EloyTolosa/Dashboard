@@ -1,6 +1,10 @@
-import { Request, Alert, pad } from './modules/helpers.js';
-import { ApiURL, ApiKey, ImagesApiUrl, DiscoverMoviesURL, SearchMoviesURL, ListMovieGenres, GetMovieImages, GetMovieInfo } from './modules/constants.js';
+import { Alert, pad } from './modules/helpers.js';
+import { ImagesApiUrl } from './modules/constants.js';
 import { NewCard } from './modules/elements.js';
+import {
+    getMoviesBySimilarText, getMoviesByYear, moviesPerRevenueRequest, movieInfoRequest, getGenres,
+    getMovieNumberByGenre, movieNumberByGenreRequest
+} from './requests.js'
 
 $("#discoverMovieByYearBtn").click(
     loadMoviesByYear
@@ -80,14 +84,6 @@ function loadMovieInfoOnClick(event) {
 
 }
 
-async function getMovieImagesByMovieID(movieID) {
-    if (movieID === "" || movieID == null) {
-        Alert("getMovieImagesByMovieID", "movieID is null")
-    }
-
-    var url = ApiURL + GetMovieImages.replace("{movie_id}", movieID) + "?api_key=" + ApiKey
-    return await Request(url, "GET")
-}
 
 function loadMoviesPerRevenue() {
 
@@ -221,7 +217,6 @@ function loadMoviesPerYear() {
                 subtitle: {
                     text: 'Source: <a href="https://developers.themoviedb.org/3/getting-started/introduction" target="_blank">TMDB</a>'
                 },
-
                 yAxis: {
                     title: {
                         text: 'Number of movies'
@@ -278,6 +273,38 @@ function loadMoviesPerYear() {
 
 }
 
+async function getDataFromGenreID(genreID, from, to, toLimit, increment) {
+    var requests = []
+    while (from <= toLimit) {
+
+        const fromStr = `${from.getFullYear()}-${pad(from.getMonth() + 1)}-${pad(from.getDate())}`
+        const toStr = `${to.getFullYear()}-${pad(to.getMonth() + 1)}-${pad(to.getDate())}`
+
+        console.log(fromStr, toStr)
+
+        var req = movieNumberByGenreRequest(genreID, fromStr, toStr)
+        requests.push(req)
+
+        // append number of movies to mpy data
+        // mpy.data.push(req.total_results)
+
+        // from always sums up 'increment' times
+        from.setFullYear(from.getFullYear() + increment)
+
+        // in the case of 'to', we will sum 'increment' times
+        // but only if the difference between the current 'to'
+        // and the 'dateTo' variable is more than 'increment'
+        // Otherwise, we will set the 'to' date to the 'dateTo'
+        // date
+        to.setFullYear(to.getFullYear() + increment)
+        if (to > toLimit) {
+            to = new Date(toLimit.getTime())
+        }
+
+    }
+    return requests
+}
+
 async function getMoviesPerYear(startYear = 1960, inc = 5) {
 
     var series = []
@@ -307,40 +334,13 @@ async function getMoviesPerYear(startYear = 1960, inc = 5) {
             data: [],
         }
 
-        while (from <= dateTo) {
-
-            const fromStr = `${from.getFullYear()}-${pad(from.getMonth() + 1)}-${pad(from.getDate())}`
-            const toStr = `${to.getFullYear()}-${pad(to.getMonth() + 1)}-${pad(to.getDate())}`
-
-            console.log(fromStr, toStr)
-
-            req = await movieNumberByGenreRequest(genre.id, fromStr, toStr)
-
-            // append number of movies to mpy data
+        var dataRes = await getDataFromGenreID(genre.id, from, to, dateTo, increment)
+        for (let i = 0; i < dataRes.length; i++) {
+            const req = await dataRes[i];
             mpy.data.push(req.total_results)
-
-            // check if to is greater than the limit
-            // if (to >= dateTo) {
-            //     break
-            // }
-
-            // from always sums up 'increment' times
-            from.setFullYear(from.getFullYear() + increment)
-
-            // in the case of 'to', we will sum 'increment' times
-            // but only if the difference between the current 'to'
-            // and the 'dateTo' variable is more than 'increment'
-            // Otherwise, we will set the 'to' date to the 'dateTo'
-            // date
-            to.setFullYear(to.getFullYear() + increment)
-            if (to > dateTo) {
-                to = new Date(dateTo.getTime())
-            }
-
         }
 
         series.push(mpy)
-
     }
 
     return series
@@ -399,46 +399,6 @@ function loadMoviePercentagePerGenre() {
     return false
 }
 
-function moviesPerRevenueRequest() {
-    const url = ApiURL + DiscoverMoviesURL + "?" + "sort_by=revenue.desc" + "&api_key=" + ApiKey
-    return Request(url, "GET")
-}
-
-function movieInfoRequest(movieID) {
-    if (movieID == "") {
-        Alert("movieInfoRequest", "movieID must be non-empty")
-    }
-
-    const url = ApiURL + GetMovieInfo.replace("{movie_id}", movieID) + "?" + "&api_key=" + ApiKey
-    return Request(url, "GET")
-}
-
-function getGenres() {
-    // get all genres
-    var url = ApiURL + ListMovieGenres + "?" + "api_key=" + ApiKey
-    return Request(url, "GET")
-}
-
-function getMovieNumberByGenre(genre) {
-    const url = ApiURL + DiscoverMoviesURL + "?" + "with_genres=" + genre.id + "&api_key=" + ApiKey
-    return Request(url, "GET")
-}
-
-function movieNumberByGenreRequest(genreId, release_date_from = "", release_date_to = "") {
-    var fromFilter = ""
-    if (release_date_from != "") {
-        fromFilter = `&release_date.gte=${release_date_from}`
-    }
-
-    var toFilter = ""
-    if (release_date_to != "") {
-        toFilter = `&release_date.lte=${release_date_to}`
-    }
-
-    const url = ApiURL + DiscoverMoviesURL + "?" + fromFilter + toFilter + "&with_genres=" + genreId + "&api_key=" + ApiKey
-    return Request(url, "GET")
-}
-
 async function getMoviesByGenre() {
 
     var perMoviesByGenre = []
@@ -468,30 +428,9 @@ async function getMoviesByGenre() {
     return perMoviesByGenre
 }
 
-async function getMoviesByYear(year) {
-    if (year == null || year === "") {
-        Alert("getMoviesByYear", "Please introduce a year")
-        return false
-    }
-    // NOTE: add default params constant like "language", "exclude adult content", etc.
-    // NOTE: create URL object with API key added
-    // NOTE: add function to set the sub-url (searchMovies, searchPeople)
-    // NOTE: add function to add params to URL 
-    var url = ApiURL + DiscoverMoviesURL + "?" + "primary_release_year=" + year + "&api_key=" + ApiKey
-    return await Request(url, "GET")
-}
+
 
 function loadMoviesBySimilarText() {
     var query = $("#discoverMovieByTextInput").val()
     var promise = getMoviesBySimilarText(query)
-}
-
-async function getMoviesBySimilarText(query) {
-    if (query === "") {
-        Alert("getMoviesBySimilarText", "Please introduce a text to search movies with")
-        return false
-    }
-
-    var url = ApiURL + SearchMoviesURL + "?" + "query=" + query + "&api_key=" + ApiKey
-    return Request(url, "GET")
 }
