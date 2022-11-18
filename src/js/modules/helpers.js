@@ -1,6 +1,10 @@
-export { Request, Alert };
+export { Request, Alert, pad };
 
 import { ApiToken } from './constants.js';
+
+function pad(d) {
+    return (d < 10) ? '0' + d.toString() : d.toString();
+}
 
 function error(fname, msg) {
     console.log("ERROR: " + fname + ": " + msg + "\n")

@@ -8,6 +8,11 @@
 }
 
 /* Movie information card */
-#movieInfoCard {
-    
+/* #movieInfoCard {
+    max-height: 450px;
+} */
+.card {
+    max-height: 450px;
+    max-width: auto;
+    overflow-y: scroll;
 }

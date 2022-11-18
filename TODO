@@ -1,11 +1,10 @@
 
 2. Piechart -> movies by genre [Done]
-3. Barchart -> quantity of movies per year since 1950 per genre name (in 5 year gaps) [In progress]
+3. Barchart -> quantity of movies per year since 1950 per genre name (in 5 year gaps) [Done]
 3. Search box -> search movies by year [Done]
     2.1. Click on movie -> movie info [Done not 100%]
-        2.1.1. Click on actors, get actors information [Tomorrow] 
-4. Multi-type barchart movie discover: // its all the same type of request
-    4.1. List movies per revenue
-    4.2. List movies per starrating
-    4.2. List movies per popularty
-5. Search box -> display searched movie info
+        2.1.1. Click on actors, get actors information [To be done] 
+4. Top 25 movies per revenue [Done]
+5. Top 25 movies per rating  [To do (only if there's time)]
+
+5. Search box -> display searched movie info [Just maybe]
