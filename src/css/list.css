@@ -16,3 +16,8 @@
     max-width: auto;
     overflow-y: scroll;
 }
+
+img.mr-3 {
+    max-width: 30%;
+    max-height: 100%;
+}

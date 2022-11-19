@@ -1,9 +1,9 @@
 import { Alert, pad } from './modules/helpers.js';
 import { ImagesApiUrl } from './modules/constants.js';
-import { NewCard } from './modules/elements.js';
+import { NewCard, NewCastList } from './modules/elements.js';
 import {
-    getMoviesBySimilarText, getMoviesByYear, moviesPerRevenueRequest, movieInfoRequest, getGenres,
-    getMovieNumberByGenre, movieNumberByGenreRequest
+    moviesBySimilarTextRequest, moviesByYearRequest, moviesPerRevenueRequest, movieInfoRequest, getGenres,
+    moviesByGenreRequest, moviesByGenreAndReleaseDatesRequest, movieImagesByMovieIDRequest, movieCastByMovieIDRequest, actorImageByActorIDRequest
 } from './requests.js'
 
 $("#discoverMovieByYearBtn").click(
@@ -11,9 +11,9 @@ $("#discoverMovieByYearBtn").click(
 )
 
 // TODO: use load* function
-$("#discoverMovieByTextBtn").click(
-    getMoviesBySimilarText
-)
+// $("#discoverMovieByTextBtn").click(
+//     getMoviesBySimilarText
+// )
 
 // Load piechart with %movies by genre
 $(document).ready(function () {
@@ -33,54 +33,82 @@ $("#movieInfoCard").scroll(function () {
     console.log("scrolling ...")
 })
 
-// TODO
-function loadMovieInfoOnClick(event) {
+async function getCastDataFromMovieID(movieID) {
+
+    // get cast data
+    var movieCastRequest = await movieCastByMovieIDRequest(movieID)
+    var cast = movieCastRequest.cast.map(function (actor) {
+        // get actor images and return
+        // {actor_name, actor_role, actor_immage_request}
+        // then we get the request and get the image
+        return {
+            name: actor.name,
+            character: actor.character,
+            image: actorImageByActorIDRequest(actor.id)
+        }
+    });
+
+    for (let i = 0; i < cast.length; i++) {
+        const actor = cast[i];
+        var imageReq = await actor.image
+        actor.image = (imageReq.profiles.length > 0) ? (ImagesApiUrl + imageReq.profiles[0].file_path) : ""
+    }
+
+    console.log(cast)
+
+    // set movie info link inactive and
+    // set the movie cast link active
+    $("#navLinkMovieInfo").removeClass("active")
+    $("#navLinkMovieCast").addClass("active")
+
+    // insert into HTML
+    $("#movieCardBody").empty()
+    $("#movieCardBody").append(NewCastList(cast))
+}
+
+async function getMovieInfoFromMovie(movie) {
+    // get image path from endpoint
+    // TODO: add carroussel
+    var movieImageRequest = await movieImagesByMovieIDRequest(movie.id)
+
+    var imagePath = movieImageRequest.backdrops[0].file_path.replace("./", "")
+    var imagePath = ImagesApiUrl + imagePath
+
+    var movieTitle = movie.original_title
+    var movieReleaseDate = movie.release_date
+    var movieOverview = movie.overview
+
+    // set movie cast link inactive and
+    // set the movie info link active
+    $("#navLinkMovieInfo").removeClass("active")
+    $("#navLinkMovieCast").addClass("active")
+
+    // create movie card
+    // TODO: move cardHTML to another module
+    // TODO: add image with .replace() function
+    $("#movieInfoCol").empty()
+    $("#movieInfoCol").append(
+        NewCard(movieTitle, imagePath, movieTitle + " movie image", movieOverview, movieReleaseDate)
+    )
+}
+
+// TODO: load data from local cache once loaded
+async function loadMovieInfoOnClick(event) {
 
     // load movie information with movie title
     var movieTitle = event.currentTarget.innerHTML
-    var promise = getMoviesBySimilarText(movieTitle)
+    var movieInfoResponse = await moviesBySimilarTextRequest(movieTitle)
 
-    promise.then(
-        //success
-        function (movieInfoResponse) {
-            console.log("Movie info", movieInfoResponse.results[0])
+    var movie = movieInfoResponse.results[0]
 
-            var movie = movieInfoResponse.results[0]
+    await getMovieInfoFromMovie(movie)
 
-            // get image path from endpoint
-            var promise = getMovieImagesByMovieID(movie.id)
-
-            promise.then(
-                //success
-                function (movieImageResponse) {
-
-                    var imagePath = movieImageResponse.backdrops[0].file_path.replace("./", "")
-                    var imagePath = ImagesApiUrl + imagePath
-
-                    var movieTitle = movie.original_title
-                    var movieReleaseDate = movie.release_date
-                    var movieOverview = movie.overview
-
-                    // create movie card
-                    // TODO: move cardHTML to another module
-                    // TODO: add image with .replace() function
-                    $("#movieInfoCol").empty()
-                    $("#movieInfoCol").append(
-                        NewCard(movieTitle, imagePath, movieTitle + " movie image", movieOverview, movieReleaseDate)
-                    )
-
-                },
-                // error
-                function (error) {
-                    console.log(error)
-                }
-            )
-        },
-        // error
-        function (error) {
-            Alert("loadMovieInfoOnClick", error)
-        }
-    )
+    $("#navLinkMovieCast").click(function () {
+        getCastDataFromMovieID(movie.id)
+    })
+    $("#navLinkMovieInfo").click(function() {
+        getMovieInfoFromMovie(movie)
+    })
 
 }
 
@@ -172,32 +200,23 @@ async function getMoviesPerRevenue() {
     return data
 }
 
-function loadMoviesByYear() {
+async function loadMoviesByYear() {
 
     var year = $("#discoverMovieByYearInput").val() // NOTE: val() will return a sttring
-    var moviesByYearPromise = getMoviesByYear(year)
-    moviesByYearPromise.then(
-        function (response) {
+    var response = await moviesByYearRequest(year)
 
-            // first empty the moviesList before entering new values
-            $("#moviesList").empty()
-            // then, add buttons
-            response.results.forEach(element => {
-                var listElement = '<button type="button" class="list-group-item list-group-item-action">' + element.original_title + '</button>'
-                $("#moviesList").append(listElement)
-            });
+    // first empty the moviesList before entering new values
+    $("#moviesList").empty()
+    // then, add buttons
+    response.results.forEach(element => {
+        var listElement = '<button type="button" class="list-group-item list-group-item-action">' + element.original_title + '</button>'
+        $("#moviesList").append(listElement)
+    });
 
-            // finally add button click listeners
-            $("button.list-group-item").click(loadMovieInfoOnClick)
+    // finally add button click listeners
+    $("button.list-group-item").click(loadMovieInfoOnClick)
 
-            console.log(response)
-        },
-        function (error) {
-            Alert("movieByYear.click()", error)
-        }
-    )
-
-    return false
+    return true
 }
 
 function loadMoviesPerYear() {
@@ -280,13 +299,8 @@ async function getDataFromGenreID(genreID, from, to, toLimit, increment) {
         const fromStr = `${from.getFullYear()}-${pad(from.getMonth() + 1)}-${pad(from.getDate())}`
         const toStr = `${to.getFullYear()}-${pad(to.getMonth() + 1)}-${pad(to.getDate())}`
 
-        console.log(fromStr, toStr)
-
-        var req = movieNumberByGenreRequest(genreID, fromStr, toStr)
-        requests.push(req)
-
-        // append number of movies to mpy data
-        // mpy.data.push(req.total_results)
+        requests.push(
+            moviesByGenreAndReleaseDatesRequest(genreID, fromStr, toStr))
 
         // from always sums up 'increment' times
         from.setFullYear(from.getFullYear() + increment)
@@ -407,20 +421,21 @@ async function getMoviesByGenre() {
     var genresRequest = await getGenres()
     var genres = genresRequest.genres
 
-    // get number of movies by genre id
-    for (let i = 0; i < genres.length; i++) {
-        var moviesRequest = await getMovieNumberByGenre(genres[i])
+    var requests = genres.map(function (genre) {
+        return moviesByGenreRequest(genre)
+    })
 
-        // console.log(genres[i].name, movies.total_results)
+    for (let i = 0; i < requests.length; i++) {
+        const request = await requests[i];
         perMoviesByGenre.push({
             name: genres[i].name,
-            y: moviesRequest.total_results,     // We'll later divide it by the total number of movies
+            y: request.total_results,     // We'll later divide it by the total number of movies
             // across all genres
         })
-        totalMovies += moviesRequest.total_results
+        totalMovies += request.total_results
     }
 
-    // transform top %
+    // transform to %
     for (let i = 0; i < perMoviesByGenre.length; i++) {
         perMoviesByGenre[i].y /= totalMovies
     }
@@ -430,7 +445,7 @@ async function getMoviesByGenre() {
 
 
 
-function loadMoviesBySimilarText() {
-    var query = $("#discoverMovieByTextInput").val()
-    var promise = getMoviesBySimilarText(query)
-}
+// function loadMoviesBySimilarText() {
+//     var query = $("#discoverMovieByTextInput").val()
+//     var promise = getMoviesBySimilarText(query)
+// }
