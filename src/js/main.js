@@ -1,4 +1,4 @@
-import { Alert, pad } from './modules/helpers.js';
+import { Alert, getObjectFromLocalStorage, pad } from './modules/helpers.js';
 import { ImagesApiUrl } from './modules/constants.js';
 import { NewCard, NewCastList } from './modules/elements.js';
 import {
@@ -69,7 +69,7 @@ async function getCastDataFromMovieID(movieID) {
 async function getMovieInfoFromMovie(movie) {
     // get image path from endpoint
     // TODO: add carroussel
-    var movieImageRequest = await movieImagesByMovieIDRequest(movie.id)
+    var movieImageRequest = await getObjectFromLocalStorage(`getMovieInfoFromMovie.${movie.id}`, movieImagesByMovieIDRequest, movie.id)
 
     var imagePath = movieImageRequest.backdrops[0].file_path.replace("./", "")
     var imagePath = ImagesApiUrl + imagePath
@@ -97,84 +97,77 @@ async function loadMovieInfoOnClick(event) {
 
     // load movie information with movie title
     var movieTitle = event.currentTarget.innerHTML
-    var movieInfoResponse = await moviesBySimilarTextRequest(movieTitle)
+    var movieInfoResponse = await getObjectFromLocalStorage(`loadMovieInfoOnClick.${movieTitle}`, moviesBySimilarTextRequest, movieTitle)
 
     var movie = movieInfoResponse.results[0]
 
+    // NOTE: I think we do not need to 'await' here 
     await getMovieInfoFromMovie(movie)
 
     $("#navLinkMovieCast").click(function () {
         getCastDataFromMovieID(movie.id)
     })
-    $("#navLinkMovieInfo").click(function() {
+    $("#navLinkMovieInfo").click(function () {
         getMovieInfoFromMovie(movie)
     })
 
 }
 
 
-function loadMoviesPerRevenue() {
+async function loadMoviesPerRevenue() {
 
-    var promise = getMoviesPerRevenue()
-    promise.then(
-        //success
-        function (data) {
+    var data = await getObjectFromLocalStorage('loadMoviesPerRevenue', getMoviesPerRevenue)
 
-            Highcharts.chart('moviesPerRevenue', {
-                chart: {
-                    type: 'column'
-                },
-                title: {
-                    text: 'Most revenue movies from all history'
-                },
-                subtitle: {
-                    text: 'Source: <a href="https://developers.themoviedb.org/3" target="_blank">TMDB</a>'
-                },
-                xAxis: {
-                    type: 'category',
-                    labels: {
-                        rotation: -90,
-                        style: {
-                            fontSize: '13px',
-                            fontFamily: 'Verdana, sans-serif'
-                        }
-                    }
-                },
-                yAxis: {
-                    min: 0,
-                    title: {
-                        text: 'Revenue ($ millions)'
-                    }
-                },
-                legend: {
-                    enabled: false
-                },
-                tooltip: {
-                    pointFormat: 'Revenue: <b>{point.y:.1f} millions</b>'
-                },
-                series: [{
-                    name: 'Revenue',
-                    data: data,
-                    dataLabels: {
-                        enabled: true,
-                        rotation: -90,
-                        color: '#FFFFFF',
-                        align: 'right',
-                        format: '{point.y:.1f}', // one decimal
-                        y: 10, // 10 pixels down from the top
-                        style: {
-                            fontSize: '13px',
-                            fontFamily: 'Verdana, sans-serif'
-                        }
-                    }
-                }]
-            });
+    Highcharts.chart('moviesPerRevenue', {
+        chart: {
+            type: 'column'
         },
-        // error
-        function (error) {
-            alert(error)
-        }
-    )
+        title: {
+            text: 'Most revenue movies from all history'
+        },
+        subtitle: {
+            text: 'Source: <a href="https://developers.themoviedb.org/3" target="_blank">TMDB</a>'
+        },
+        xAxis: {
+            type: 'category',
+            labels: {
+                rotation: -90,
+                style: {
+                    fontSize: '13px',
+                    fontFamily: 'Verdana, sans-serif'
+                }
+            }
+        },
+        yAxis: {
+            min: 0,
+            title: {
+                text: 'Revenue ($ millions)'
+            }
+        },
+        legend: {
+            enabled: false
+        },
+        tooltip: {
+            pointFormat: 'Revenue: <b>{point.y:.1f} millions</b>'
+        },
+        series: [{
+            name: 'Revenue',
+            data: data,
+            dataLabels: {
+                enabled: true,
+                rotation: -90,
+                color: '#FFFFFF',
+                align: 'right',
+                format: '{point.y:.1f}', // one decimal
+                y: 10, // 10 pixels down from the top
+                style: {
+                    fontSize: '13px',
+                    fontFamily: 'Verdana, sans-serif'
+                }
+            }
+        }]
+    });
+
 }
 
 async function getMoviesPerRevenue() {
@@ -200,95 +193,113 @@ async function getMoviesPerRevenue() {
     return data
 }
 
+async function getAllMoviesByYearRequests(year) {
+    var requests = []
+    requests.push(moviesByYearRequest(year))
+
+    var req = await requests[0]
+    console.log("number of pages", req.total_pages)
+    for (let i = 1; i < req.total_pages; i++) {
+        requests.push(moviesByYearRequest(year, i + 1))
+    }
+
+    return requests
+}
+
+async function getAllMoviesByYear(year) {
+    var requests = await getAllMoviesByYearRequests(year)
+    var doneRequests = []
+    for (let i = 0; i < requests.length; i++) {
+        doneRequests.push(await requests[i])
+    }
+
+    return doneRequests
+}
+
+
 async function loadMoviesByYear() {
 
     var year = $("#discoverMovieByYearInput").val() // NOTE: val() will return a sttring
-    var response = await moviesByYearRequest(year)
+    // key of the localstorage has to be loadMoviesByYear.{year} so the key does not repeat
+    var responses = await getObjectFromLocalStorage(`loadMoviesByYear.${year}`, getAllMoviesByYear, year)
 
     // first empty the moviesList before entering new values
     $("#moviesList").empty()
     // then, add buttons
-    response.results.forEach(element => {
-        var listElement = '<button type="button" class="list-group-item list-group-item-action">' + element.original_title + '</button>'
-        $("#moviesList").append(listElement)
-    });
+    for (let i = 0; i < responses.length; i++) {
+        const response = await responses[i];
+        response.results.forEach(element => {
+            var listElement = '<button type="button" class="list-group-item list-group-item-action">' + element.original_title + '</button>'
+            $("#moviesList").append(listElement)
+        })
+    }
+
 
     // finally add button click listeners
     $("button.list-group-item").click(loadMovieInfoOnClick)
 
-    return true
 }
 
-function loadMoviesPerYear() {
+async function loadMoviesPerYear() {
 
     // get data
-    var promise = getMoviesPerYear(2010, 1) // form 2010 increment of 1
-    promise.then(
-        // success
-        function (data) {
-            // put highchart
-            Highcharts.chart('moviesPerYear', {
+    var data = await getObjectFromLocalStorage('loadMoviesPerYear', getMoviesPerYear, 2010, 1)
 
-                title: {
-                    text: 'Evolution of the amount of movies made by genre'
-                },
+    // put highchart
+    Highcharts.chart('moviesPerYear', {
 
-                subtitle: {
-                    text: 'Source: <a href="https://developers.themoviedb.org/3/getting-started/introduction" target="_blank">TMDB</a>'
-                },
-                yAxis: {
-                    title: {
-                        text: 'Number of movies'
-                    }
-                },
-
-                xAxis: {
-                    accessibility: {
-                        rangeDescription: `Range: 2010 to 2022`
-                    }
-                },
-
-                legend: {
-                    layout: 'vertical',
-                    align: 'right',
-                    verticalAlign: 'middle'
-                },
-
-                plotOptions: {
-                    series: {
-                        label: {
-                            connectorAllowed: false
-                        },
-                        pointStart: 2010
-                    }
-                },
-
-                series: data,
-
-                responsive: {
-                    rules: [{
-                        condition: {
-                            maxWidth: 500
-                        },
-                        chartOptions: {
-                            legend: {
-                                layout: 'horizontal',
-                                align: 'center',
-                                verticalAlign: 'bottom'
-                            }
-                        }
-                    }]
-                }
-
-            });
+        title: {
+            text: 'Evolution of the amount of movies made by genre'
         },
-        // error
-        function (error) {
-            Alert("loadMoviesPerYear", error)
+
+        subtitle: {
+            text: 'Source: <a href="https://developers.themoviedb.org/3/getting-started/introduction" target="_blank">TMDB</a>'
+        },
+        yAxis: {
+            title: {
+                text: 'Number of movies'
+            }
+        },
+
+        xAxis: {
+            accessibility: {
+                rangeDescription: `Range: 2010 to 2022`
+            }
+        },
+
+        legend: {
+            layout: 'vertical',
+            align: 'right',
+            verticalAlign: 'middle'
+        },
+
+        plotOptions: {
+            series: {
+                label: {
+                    connectorAllowed: false
+                },
+                pointStart: 2010
+            }
+        },
+
+        series: data,
+
+        responsive: {
+            rules: [{
+                condition: {
+                    maxWidth: 500
+                },
+                chartOptions: {
+                    legend: {
+                        layout: 'horizontal',
+                        align: 'center',
+                        verticalAlign: 'bottom'
+                    }
+                }
+            }]
         }
-    )
 
-
+    });
 
 }
 
@@ -360,55 +371,50 @@ async function getMoviesPerYear(startYear = 1960, inc = 5) {
     return series
 }
 
-function loadMoviePercentagePerGenre() {
+async function loadMoviePercentagePerGenre() {
 
-    // load data from api
-    var moviesByGenrePromise = getMoviesByGenre()
-    moviesByGenrePromise.then(
-        // successful
-        function (moviesByGenre) {
-            // console.log(moviesByGenre)
+    // we try to get the data from localStorage
+    // if data exists, we just transform into an object
+    // if data does not exist in localStorage, we load it from the API
+    // and then we store it in the localStorage
+    var moviesByGenre = await getObjectFromLocalStorage(
+        'loadMoviePercentagePerGenre', getMoviesByGenre)
 
-            // load highcharts
-            Highcharts.chart('perMoviesByGenre', {
-                chart: {
-                    plotBackgroundColor: null,
-                    plotBorderWidth: null,
-                    plotShadow: false,
-                    type: 'pie'
-                },
-                title: {
-                    text: 'Percentage of movies based on genre'
-                },
-                tooltip: {
-                    pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
-                },
-                accessibility: {
-                    point: {
-                        valueSuffix: '%'
-                    }
-                },
-                plotOptions: {
-                    pie: {
-                        allowPointSelect: true,
-                        cursor: 'pointer',
-                        dataLabels: {
-                            enabled: true,
-                            format: '<b>{point.name}</b>: {point.percentage:.1f} %'
-                        }
-                    }
-                },
-                series: [{
-                    name: 'Brands',
-                    colorByPoint: true,
-                    data: moviesByGenre,
-                }]
-            });
+    // load highcharts
+    Highcharts.chart('perMoviesByGenre', {
+        chart: {
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false,
+            type: 'pie'
         },
-        function (error) {
-            Alert("loadMoviePercentagePerGenre", error)
-        }
-    )
+        title: {
+            text: 'Percentage of movies based on genre'
+        },
+        tooltip: {
+            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+        },
+        accessibility: {
+            point: {
+                valueSuffix: '%'
+            }
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                    enabled: true,
+                    format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+                }
+            }
+        },
+        series: [{
+            name: 'Brands',
+            colorByPoint: true,
+            data: moviesByGenre,
+        }]
+    });
 
     return false
 }

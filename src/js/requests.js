@@ -87,7 +87,7 @@ function moviesByGenreRequest(genre) {
     return Request(url, "GET")
 }
 
-function moviesByYearRequest(year) {
+function moviesByYearRequest(year, page=1) {
     if (year == null || year === "") {
         Alert("getMoviesByYear", "Please introduce a year")
         return false
@@ -96,7 +96,7 @@ function moviesByYearRequest(year) {
     // NOTE: create URL object with API key added
     // NOTE: add function to set the sub-url (searchMovies, searchPeople)
     // NOTE: add function to add params to URL 
-    var url = ApiURL + DiscoverMoviesURL + "?" + "primary_release_year=" + year + "&api_key=" + ApiKey
+    var url = ApiURL + DiscoverMoviesURL + "?" + "primary_release_year=" + year+ "&page=" + page + "&api_key=" + ApiKey
     return Request(url, "GET")
 }
 
