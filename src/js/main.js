@@ -197,9 +197,9 @@ async function getAllMoviesByYearRequests(year) {
     var requests = []
     requests.push(moviesByYearRequest(year))
 
+    const maxPages = 250
     var req = await requests[0]
-    console.log("number of pages", req.total_pages)
-    for (let i = 1; i < req.total_pages; i++) {
+    for (let i = 1; i < req.total_pages && i < maxPages; i++) {
         requests.push(moviesByYearRequest(year, i + 1))
     }
 
@@ -208,12 +208,13 @@ async function getAllMoviesByYearRequests(year) {
 
 async function getAllMoviesByYear(year) {
     var requests = await getAllMoviesByYearRequests(year)
-    var doneRequests = []
     for (let i = 0; i < requests.length; i++) {
-        doneRequests.push(await requests[i])
+        requests[i] = (await requests[i]).results.map(function(result) {
+            return result.original_title
+        })
     }
 
-    return doneRequests
+    return requests
 }
 
 
@@ -227,9 +228,9 @@ async function loadMoviesByYear() {
     $("#moviesList").empty()
     // then, add buttons
     for (let i = 0; i < responses.length; i++) {
-        const response = await responses[i];
-        response.results.forEach(element => {
-            var listElement = '<button type="button" class="list-group-item list-group-item-action">' + element.original_title + '</button>'
+        const response = /*await*/ responses[i];
+        response.forEach(element => {
+            var listElement = '<button type="button" class="list-group-item list-group-item-action">' + element + '</button>'
             $("#moviesList").append(listElement)
         })
     }
