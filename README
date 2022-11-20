@@ -1,0 +1,44 @@
+# HOW THE PROJECT WORKS
+
+This project has three dashboards:
+1. Dashboard displaying the percentage of movies based on genre.
+2. Dashboard displaying the amount of movies per genre and per year, since 2010.
+3. Dashboard displaying the top 25 movies which had the most revenue in history.
+
+Also, this project has an input box where you can insert a year and the page will show you
+the list of all movies released in that year.
+If you click on any movie, a card will appear with movie information and a tab bar above. 
+There are two tabs: Movie Info, where movie info will be displayed; and Cast, where all
+the cast, with their images and the name of the character they interpreted will appear.
+
+# HOW THE PROJECT IS STRUCTURED
+
+The project has basically three main modules inside src/:
+1. index.html: main HTML file where everything that is displayed is contained.
+2. js/: folder where all JavaScript files are contained. This folder is, at the same time, divided in:
+    - main.js: where all the methods in charge of loading the highcharts are defined.
+    - requests.js: where all API requests to get the data are defined.
+    - modules/: modules to help separate the code in logical blocks. There are three modules:
+        - contstants.js: where all constants (ApiURL, ApiKey, endpoints...) are defined.
+        - elements.js: where dynamically added elements are defined and parametrized
+        - helpers.js: where helper functions are defined.
+3. css/: where all css files are defined. We have:
+    - highcharts.css: where highcharts styles are defined
+    - index.css: where the rest of the elements styles are set
+
+# PROJECT FUNCTIONALITIES
+
+## LOCAL STORAGE
+
+To make the project faster, I am using localStorage property in JavaScript, which lets us pre-loaded results. This way, we can re-load the page
+and all the previous results will be automatically loaded from the cache, without the need of recalculating them and repeating API requests.
+
+## ASYNCHRONOUS CALLS
+
+For the dashboards to load the data faster, I am using the async/await constructs so we can load data asynchronously
+and save time without getting the data secuentially.
+
+For example, in the method loadMoviesPerYear(), we have to calculate, for every genre, the amount of movies for each year, from 2010 to 2022. This means
+that there will be 19 (genres) * 13 (years) = 247 requests. And every request is quite time-consuming.
+So, instead make one API request, wait for it to resolve, and then insert the data one by one, what we will do is first making all the requests (without waiting for them to resolve)
+and then, when we need the data from the request, we wait for the requests to resolve. This way we save up to 90% of the time (depending of the amount of requests and the requests types).
